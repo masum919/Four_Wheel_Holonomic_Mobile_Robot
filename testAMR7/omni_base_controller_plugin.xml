@@ -1,0 +1,10 @@
+<library path="omni_base_controller">
+    <class name="omni_base_controller/OmniBaseController"
+           type="omni_base_controller::OmniBaseController"
+           base_class_type="controller_interface::ControllerInterface">
+        <description>
+            Omni-directional base controller for 4-wheel independent steering robots.
+            Implements inverse kinematics for swerve drive with wheel angle optimization.
+        </description>
+    </class>
+</library>

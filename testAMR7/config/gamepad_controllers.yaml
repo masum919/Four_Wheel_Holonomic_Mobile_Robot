@@ -1,0 +1,155 @@
+# ============================================================================
+# GAMEPAD CONTROLLER CONFIGURATION
+# For Xbox 360 / Xbox One / Compatible Controllers
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# JOY NODE CONFIGURATION
+# Handles raw gamepad input from /dev/input/js0
+# ----------------------------------------------------------------------------
+joy_node:
+  ros__parameters:
+    device_id: 0                    # /dev/input/js0
+    deadzone: 0.05                  # Hardware-level deadzone
+    autorepeat_rate: 50.0           # Hz - match controller rate
+    coalesce_interval_ms: 1         # Minimize latency
+
+# ----------------------------------------------------------------------------
+# SWERVE GAMEPAD CONTROLLER
+# Maps joystick inputs to omnidirectional motion commands
+# ----------------------------------------------------------------------------
+swerve_gamepad_controller:
+  ros__parameters:
+    # ========================================================================
+    # VELOCITY LIMITS
+    # Match your omni_base_controller limits or set lower for safety
+    # ========================================================================
+    max_linear_velocity: 0.5        # m/s - maximum translation speed
+    max_angular_velocity: 2.0       # rad/s - maximum rotation speed
+    
+    # ========================================================================
+    # CONTROL PARAMETERS
+    # ========================================================================
+    deadzone: 0.1                   # Software deadzone (0.0 - 1.0)
+    publish_rate: 50.0              # Hz - cmd_vel publishing frequency
+    
+    # ========================================================================
+    # SPEED MODES
+    # ========================================================================
+    enable_precision: true          # Enable precision mode (LB button)
+    precision_multiplier: 0.25      # 25% speed when LB held
+    
+    enable_turbo: true              # Enable turbo mode (RB button)
+    turbo_multiplier: 1.5           # 150% speed when RB held
+    
+    # ========================================================================
+    # AXIS MAPPING - Xbox 360 Controller (Standard)
+    # ========================================================================
+    # Left Stick:
+    #   - Forward/Back  → vx (robot's forward velocity)
+    #   - Left/Right    → vy (robot's strafe velocity)
+    # Right Stick:
+    #   - Left/Right    → omega (rotation)
+    #   - Up/Down       → (unused)
+    # ========================================================================
+    
+    axis_linear_x: 1                # Left stick vertical (vx)
+    axis_linear_y: 0                # Left stick horizontal (vy)
+    axis_angular: 3                 # Right stick horizontal (omega)
+    
+    # ========================================================================
+    # BUTTON MAPPING - Xbox 360 Controller
+    # ========================================================================
+    # Index | Button Name | Function
+    # ------|-------------|------------------------------------------
+    #   0   | A           | Emergency stop toggle
+    #   1   | B           | Reset to normal speed
+    #   2   | X           | (unused)
+    #   3   | Y           | (unused)
+    #   4   | LB          | Precision mode (hold)
+    #   5   | RB          | Turbo mode (hold)
+    #   6   | Back        | (unused)
+    #   7   | Start       | Toggle verbose logging
+    #   8   | Xbox        | (unused)
+    #   9   | L3          | Left stick press (unused)
+    #  10   | R3          | Right stick press (unused)
+    # ========================================================================
+    
+    button_emergency_stop: 0        # A - Toggle emergency stop
+    button_reset_speed: 1           # B - Reset to 100% speed
+    button_precision: 4             # LB - Precision mode (25%)
+    button_turbo: 5                 # RB - Turbo mode (150%)
+    button_toggle_verbose: 7        # Start - Toggle detailed logging
+
+# ============================================================================
+# ALTERNATIVE CONFIGURATIONS
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# PRESET 1: SAFE MODE (Low speeds for testing)
+# ----------------------------------------------------------------------------
+# Uncomment to override main config:
+#
+# swerve_gamepad_controller:
+#   ros__parameters:
+#     max_linear_velocity: 0.2
+#     max_angular_velocity: 1.0
+#     precision_multiplier: 0.1
+#     turbo_multiplier: 1.0
+
+# ----------------------------------------------------------------------------
+# PRESET 2: ADVANCED MODE (Experienced operators)
+# ----------------------------------------------------------------------------
+# swerve_gamepad_controller:
+#   ros__parameters:
+#     max_linear_velocity: 1.0
+#     max_angular_velocity: 3.0
+#     deadzone: 0.05
+#     precision_multiplier: 0.2
+#     turbo_multiplier: 2.0
+
+# ----------------------------------------------------------------------------
+# PRESET 3: PS4 CONTROLLER MAPPING
+# ----------------------------------------------------------------------------
+# If using PlayStation 4 DualShock controller:
+#
+# swerve_gamepad_controller:
+#   ros__parameters:
+#     # PS4 axes are slightly different
+#     axis_linear_x: 1
+#     axis_linear_y: 0
+#     axis_angular: 2
+#     
+#     # PS4 button mapping
+#     button_emergency_stop: 0      # X (Cross)
+#     button_reset_speed: 1         # O (Circle)
+#     button_precision: 4           # L1
+#     button_turbo: 5               # R1
+#     button_toggle_verbose: 9      # Options
+
+# ============================================================================
+# NOTES
+# ============================================================================
+# 
+# 1. AXIS VALUES:
+#    - Range: -1.0 to +1.0
+#    - Left stick Y: +1.0 = forward, -1.0 = backward
+#    - Left stick X: +1.0 = right, -1.0 = left
+#    - Right stick X: +1.0 = CCW, -1.0 = CW
+#
+# 2. DEADZONE:
+#    - Hardware deadzone (joy_node): 0.05 recommended
+#    - Software deadzone (controller): 0.1 recommended
+#    - Total deadzone = hardware + software effect
+#
+# 3. COORDINATE FRAMES:
+#    - vx: Forward (+) / Backward (-)
+#    - vy: Right (+) / Left (-)
+#    - omega: Counter-clockwise (+) / Clockwise (-)
+#
+# 4. TESTING:
+#    - Check raw joy data: ros2 topic echo /joy
+#    - Check commands: ros2 topic echo /omni_base_controller/cmd_vel
+#    - Monitor logs: ros2 node info swerve_gamepad_controller
+#
+# ============================================================================

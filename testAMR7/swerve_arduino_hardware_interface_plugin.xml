@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+
+<library path="swerve_arduino_hardware_interface">
+    <class name="swerve_arduino_controller/SwerveArduinoInterface"
+           type="swerve_arduino_controller::SwerveArduinoInterface"
+           base_class_type="hardware_interface::SystemInterface">
+        <description>
+            Hardware interface for 4-wheel swerve drive robot via Arduino Mega serial communication.
+        </description>
+    </class>
+</library>

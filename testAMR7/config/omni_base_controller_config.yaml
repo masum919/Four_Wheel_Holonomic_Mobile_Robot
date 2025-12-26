@@ -1,0 +1,53 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 100  # Hz
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    omni_base_controller:
+      type: omni_base_controller/OmniBaseController
+
+omni_base_controller:
+  ros__parameters:
+
+    wheel_joints:
+      - joint_BR    # [0] BACK-RIGHT
+      - joint_FR    # [1] FRONT-RIGHT
+      - joint_FL    # [2] FRONT-LEFT
+      - joint_BL    # [3] BACK-LEF
+    
+    steer_joints:
+      - joint_BR_steer    # [0] BACK-RIGHT
+      - joint_FR_steer    # [1] FRONT-RIGHT
+      - joint_FL_steer    # [2] FRONT-LEFT
+      - joint_BL_steer    # [3] BACK-LEFT
+    
+    # Robot dimensions (measured from URDF)
+    wheel_radius: 0.0275        # 27.5mm
+    wheel_base: 0.13773         # 137.73mm (2 * 0.068865)
+    wheel_track: 0.085354       # 85.354mm (2 * 0.042677)
+    
+    # Command timeout
+    cmd_vel_timeout: 1.0
+    
+    # Velocity limits
+    max_linear_velocity: 2.0    # m/s   
+    max_angular_velocity: 2.0   # rad/s
+    max_wheel_velocity: 50.0    # rad/s
+    max_steer_velocity: 5.0     # rad/s
+    
+    # Steering optimization
+    steer_angle_tolerance: 0.15
+    use_shortest_path: true
+    
+    # Steering priority parameters (prevents body motion during steering)
+    steering_threshold: 0.2      # rad (~11°) - angle change threshold to trigger priority mode
+    velocity_scale_factor: 0.0   # 0.0 = stop wheels completely during large steering changes
+    
+    # Odometry
+    enable_odometry: true        # Enable for debugging
+    enable_odom_tf: false         # Keep false to avoid conflicts with other TF publishers (sensors, SLAM, etc.). Enalble to only see basic motion in Rviz
+    odom_frame_id: "odom"
+    base_frame_id: "base_link"
+    publish_rate: 100.0

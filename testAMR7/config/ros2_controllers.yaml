@@ -1,0 +1,60 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 100  # Hz
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    omni_base_controller:
+      type: omni_base_controller/OmniBaseController
+
+omni_base_controller:
+  ros__parameters:
+    # Wheel joints (drive) - MATCHING URDF EXACTLY
+    # Based on URDF joint origins from base_link:
+    # joint_BR_steer: xyz="0.068865 0.042677 -0.00042426"  -> Back-Right (x=+0.069, y=+0.043)
+    # joint_FR_steer: xyz="-0.06889 0.042677 -0.00042426"  -> Front-Right (x=-0.069, y=+0.043)
+    # joint_FL_steer: xyz="-0.06889 -0.042678 -0.00042426" -> Front-Left (x=-0.069, y=-0.043)
+    # joint_BL_steer: xyz="0.068865 -0.042678 -0.00042426" -> Back-Left (x=+0.069, y=-0.043)
+    
+    wheel_joints:
+      - joint_BR    # Back-Right wheel (x=+0.069, y=+0.043)
+      - joint_FR    # Front-Right wheel (x=-0.069, y=+0.043)
+      - joint_FL    # Front-Left wheel (x=-0.069, y=-0.043)
+      - joint_BL    # Back-Left wheel (x=+0.069, y=-0.043)
+    
+    # Steering joints - MATCHING wheel_joints order
+    steer_joints:
+      - joint_BR_steer    # Back-Right steer
+      - joint_FR_steer    # Front-Right steer
+      - joint_FL_steer    # Front-Left steer
+      - joint_BL_steer    # Back-Left steer
+    
+    # Robot dimensions (in meters)
+    # Distance calculations from URDF coordinates:
+    # wheel_base = |x_front - x_back| = |-0.06889 - 0.068865| = 0.137755
+    # wheel_track = |y_right - y_left| = |0.042677 - (-0.042678)| = 0.085355
+    wheel_radius: 0.0275      # 27.5mm (wheel radius)
+    wheel_base: 0.137755      # Distance between front and rear axles (in meters)
+    wheel_track: 0.085355     # Distance between left and right wheels (in meters)
+    
+    # Command timeout (seconds) - stop if no command received
+    cmd_vel_timeout: 0.5
+    
+    # Velocity limits (matching URDF ros2_control limits)
+    max_linear_velocity: 1.0   # m/s
+    max_angular_velocity: 3.14  # rad/s (about 180 deg/s)
+    max_wheel_velocity: 50.0    # rad/s (matches URDF joint limits)
+    max_steer_velocity: 15.0    # rad/s (matches URDF joint limits)
+    
+    # Steering optimization parameters
+    steer_angle_tolerance: 0.005  # rad - tolerance for considering steering aligned
+    use_shortest_path: true      # Optimize steering to take shortest path
+    
+    # Control parameters
+    enable_odom_tf: true         # Publish odometry TF
+    odom_frame_id: "odom"
+    base_frame_id: "base_link"
+    
+    # Publishing rate
+    publish_rate: 50.0  # Hz for odometry

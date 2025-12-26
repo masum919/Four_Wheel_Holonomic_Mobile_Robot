@@ -1,0 +1,639 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="testAMR7">
+    
+    <!-- Default: use_sim=true (Gazebo simulation)
+         For real hardware: pass use_sim:=false in launch file or xacro command -->
+
+    <xacro:arg name="use_sim" default="true"/>
+    <xacro:arg name="arduino_port" default="/dev/ttyACM0"/>
+    
+    <!-- Keeping Pi for future use cases -->
+    <xacro:property name="PI" value="3.1416"/>
+
+    <!-- Wheel properties for inertia calculation -->
+    <xacro:property name="wheel_sphere_radius" value="0.028"/>  <!-- working value-slightly larger than visual mesh, -->
+    <xacro:property name="wheel_mass" value="0.6"/> <!-- working value -->
+    
+    
+    <!-- Base link friction -->
+    <xacro:property name="base_mu1" value="0.2"/>
+    <xacro:property name="base_mu2" value="0.2"/>
+    
+    <!-- Steering links friction (minimal for free rotation) -->
+    <xacro:property name="steer_mu1" value="0.01"/>
+    <xacro:property name="steer_mu2" value="0.01"/>
+    
+    <!-- Wheel links friction - INCREASED FOR TRACTION -->
+    <xacro:property name="wheel_mu1" value="10.0"/> <!-- working value -->
+    <xacro:property name="wheel_mu2" value="10.0"/> <!-- working value -->
+    
+    <!-- Wheel joint dynamics - REDUCED RESISTANCE -->
+    <xacro:property name="wheel_joint_damping" value="0.001"/>
+    <xacro:property name="wheel_joint_friction" value="0.001"/>
+    
+    <!-- Wheel contact properties -->
+    <xacro:property name="wheel_kp" value="10000000.0"/>  <!-- this works better -->
+    <xacro:property name="wheel_kd" value="1.0"/>
+    <xacro:property name="wheel_min_depth" value="0.0001"/>
+    <xacro:property name="wheel_max_vel" value="10.0"/>
+    
+    <!-- INERTIA FORMULAS FOR SPHERE
+         For a sphere:
+         Ixx = Iyy = Izz = (2/5) * m * r²
+    -->
+    <xacro:property name="wheel_ixx" value="${(2.0/5.0) * wheel_mass * wheel_sphere_radius * wheel_sphere_radius}"/>
+    <xacro:property name="wheel_iyy" value="${(2.0/5.0) * wheel_mass * wheel_sphere_radius * wheel_sphere_radius}"/>
+    <xacro:property name="wheel_izz" value="${(2.0/5.0) * wheel_mass * wheel_sphere_radius * wheel_sphere_radius}"/>
+
+    <!-- Define different colors -->
+
+    <material name="black">
+        <color rgba="0.0 0.0 0.0 1.0" />
+    </material>
+
+    <material name="blue">
+        <color rgba="0.0 0.0 0.8 1.0" />
+    </material>
+
+    <material name="green">
+        <color rgba="0.0 0.8 0.0 1.0" />
+    </material>
+    
+    <material name="red">
+        <color rgba="0.8 0.0 0.0 1.0" />
+    </material>
+
+    <material name="yellow">
+        <color rgba="1.0 1.0 0.0 1.0" />
+    </material>
+
+    <material name="grey">
+        <color rgba="0.898039215686275 0.917647058823529 0.929411764705882 1" />
+    </material>
+
+    <!-- GAZEBO TAGS  -->
+    
+    <!-- Base link -->
+    <gazebo reference="base_link">
+        <material>Gazebo/Yellow</material>
+        <mu1>${base_mu1}</mu1>
+        <mu2>${base_mu2}</mu2>
+        <self_collide>0</self_collide>
+    </gazebo>
+
+    <!-- STEERING LINKS - Minimal friction for free rotation -->
+    <gazebo reference="link_BR_steer">
+        <material>Gazebo/Black</material>
+        <mu1>${steer_mu1}</mu1>
+        <mu2>${steer_mu2}</mu2>
+    </gazebo>
+
+    <gazebo reference="link_FR_steer">
+        <material>Gazebo/Black</material>
+        <mu1>${steer_mu1}</mu1>
+        <mu2>${steer_mu2}</mu2>
+    </gazebo>
+
+    <gazebo reference="link_FL_steer">
+        <material>Gazebo/Black</material>
+        <mu1>${steer_mu1}</mu1>
+        <mu2>${steer_mu2}</mu2>
+    </gazebo>
+
+    <gazebo reference="link_BL_steer">
+        <material>Gazebo/Black</material>
+        <mu1>${steer_mu1}</mu1>
+        <mu2>${steer_mu2}</mu2>
+    </gazebo>
+
+    <!-- WHEEL LINKS - Spherical collision with slip -->
+    <gazebo reference="link_BR">
+        <material>Gazebo/Black</material>
+    </gazebo>
+
+    <gazebo reference="link_FR">
+        <material>Gazebo/Black</material>
+    </gazebo>
+
+    <gazebo reference="link_FL">
+        <material>Gazebo/Black</material>
+    </gazebo>
+
+    <gazebo reference="link_BL">
+        <material>Gazebo/Black</material>
+    </gazebo>
+
+    <!--GAZEBO ROS2 CONTROL PLUGIN (Only loaded in simulation) -->
+    <xacro:if value="$(arg use_sim)">
+        <gazebo>
+            <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+                <parameters>$(find testAMR7)/config/omni_base_controller_config.yaml</parameters>
+            </plugin>
+        </gazebo>
+    </xacro:if>
+
+    <!--ROS2_CONTROL HARDWARE INTERFACE
+         
+         This section automatically switches between:
+         - GazeboSimSystem (when use_sim=true)
+         - SwerveArduinoInterface (when use_sim=false) -->
+
+    <ros2_control name="SwerveRobotSystem" type="system">
+        
+        <!-- HARDWARE PLUGIN SELECTION -->
+        <hardware>
+            <!-- Gazebo Simulation -->
+            <xacro:if value="$(arg use_sim)">
+                <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+            </xacro:if>
+            
+            <!-- Real Arduino Hardware -->
+            <xacro:unless value="$(arg use_sim)">
+                <plugin>swerve_arduino_controller/SwerveArduinoInterface</plugin>
+                <param name="port">$(arg arduino_port)</param>
+                <param name="baud_rate">230400</param> 
+            </xacro:unless>
+        </hardware>
+        
+        <!-- STEERING JOINTS (4 continuous revolute joints) -->
+        
+        <joint name="joint_BR_steer">
+            <command_interface name="position">
+                <param name="min">-10</param>
+                <param name="max">10</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+        </joint>
+        
+        <joint name="joint_FR_steer">
+            <command_interface name="position">
+                <param name="min">-10</param>
+                <param name="max">10</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+        </joint>
+        
+        <joint name="joint_FL_steer">
+            <command_interface name="position">
+                <param name="min">-10</param>
+                <param name="max">10</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+        </joint>
+        
+        <joint name="joint_BL_steer">
+            <command_interface name="position">
+                <param name="min">-10</param>
+                <param name="max">10</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+        </joint>
+
+        <!-- WHEEL JOINTS (4 continuous revolute joints) -->
+        
+        <joint name="joint_BR">
+            <command_interface name="velocity">
+                <param name="min">-50</param>
+                <param name="max">50</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+        </joint>
+        
+        <joint name="joint_FR">
+            <command_interface name="velocity">
+                <param name="min">-50</param>
+                <param name="max">50</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+        </joint>
+        
+        <joint name="joint_FL">
+            <command_interface name="velocity">
+                <param name="min">-50</param>
+                <param name="max">50</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+        </joint>
+        
+        <joint name="joint_BL">
+            <command_interface name="velocity">
+                <param name="min">-50</param>
+                <param name="max">50</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+        </joint>
+    </ros2_control>
+
+    <!-- ROBOT LINKS AND JOINTS -->
+
+    <!-- BASE LINK -->
+    <link name="base_link">
+        <inertial>
+            <origin xyz="0 0 -0.0119595003073567" rpy="0 0 0" />
+            <mass value="1.57057930536749" />
+            <inertia
+                ixx="0.00538605542529851"
+                ixy="0"
+                ixz="0"
+                iyy="0.00693865152644874"
+                iyz="0"
+                izz="0.0120646433026368" />
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <mesh filename="package://testAMR7/meshes/base_link.STL" />
+            </geometry>
+            <material name="yellow"/>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <mesh filename="package://testAMR7/meshes/base_link.STL" />
+            </geometry>
+        </collision>
+    </link>
+
+    
+    <!-- Steering link -->
+    <link name="link_BR_steer">
+        <inertial>
+            <origin xyz="0 0 -0.0385810917612286" rpy="0 0 0" />
+            <mass value="0.365838838071492" />
+            <inertia
+                ixx="0.000196145987384263"
+                ixy="0"
+                ixz="0"
+                iyy="0.000205378343467889"
+                iyz="0"
+                izz="0.00033595536094981" />
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <mesh filename="package://testAMR7/meshes/link_BR_steer.STL" />
+            </geometry>
+            <material name="black" />
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <mesh filename="package://testAMR7/meshes/link_BR_steer.STL" />
+            </geometry>
+        </collision>
+    </link>
+
+    <!-- Steering joint -->
+    <joint name="joint_BR_steer" type="continuous">
+        <origin xyz="0.068865 0.042677 -0.00042426" rpy="0 0 0" />
+        <parent link="base_link" />
+        <child link="link_BR_steer" />
+        <axis xyz="0 0 -1" />
+    </joint>
+
+   
+    <link name="link_BR">
+        <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <mass value="${wheel_mass}" />
+            <inertia
+                ixx="${wheel_ixx}"
+                ixy="0"
+                ixz="0"
+                iyy="${wheel_iyy}"
+                iyz="0"
+                izz="${wheel_izz}" />
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <mesh filename="package://testAMR7/meshes/link_BR.STL" />
+            </geometry>
+            <material name="black" />
+        </visual>
+        
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <sphere radius="${wheel_sphere_radius}"/>
+            </geometry>
+            <surface>
+                <friction>
+                    <ode>
+                        <mu>${wheel_mu1}</mu>
+                        <mu2>${wheel_mu2}</mu2>
+                        <slip1>0.00001</slip1>
+                        <slip2>0.00001</slip2>
+                    </ode>
+                </friction>
+                <contact>
+                    <ode>
+                        <kp>${wheel_kp}</kp>
+                        <kd>${wheel_kd}</kd>
+                        <min_depth>${wheel_min_depth}</min_depth>
+                        <max_vel>${wheel_max_vel}</max_vel>
+                    </ode>
+                </contact>
+            </surface>
+        </collision>
+    </link>
+
+    <!-- Wheel joint -->
+    <joint name="joint_BR" type="continuous">
+        <origin xyz="0 0 -0.063051" rpy="0 0 0" />
+        <parent link="link_BR_steer" />
+        <child link="link_BR" />
+        <axis xyz="0 1 0" />
+        <dynamics damping="${wheel_joint_damping}" friction="${wheel_joint_friction}"/>
+    </joint>
+
+    
+    <!-- Steering link -->
+    <link name="link_FR_steer">
+        <inertial>
+            <origin xyz="0 0 -0.0385810917631276" rpy="0 0 0" />
+            <mass value="0.365838838042616" />
+            <inertia
+                ixx="0.000196145304534498"
+                ixy="0"
+                ixz="0"
+                iyy="0.000205379017907267"
+                iyz="0"
+                izz="0.000335955352540065" />
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <mesh filename="package://testAMR7/meshes/link_FR_steer.STL" />
+            </geometry>
+            <material name="black" />
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <mesh filename="package://testAMR7/meshes/link_FR_steer.STL" />
+            </geometry>
+        </collision>
+    </link>
+
+    <!-- Steering joint -->
+    <joint name="joint_FR_steer" type="continuous">
+        <origin xyz="-0.068865 0.042677 -0.00042426" rpy="0 0 0" />
+        <parent link="base_link" />
+        <child link="link_FR_steer" />
+        <axis xyz="0 0 -1" />
+    </joint>
+
+    
+    <link name="link_FR">
+        <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <mass value="${wheel_mass}" />
+            <inertia
+                ixx="${wheel_ixx}"
+                ixy="0"
+                ixz="0"
+                iyy="${wheel_iyy}"
+                iyz="0"
+                izz="${wheel_izz}" />
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <mesh filename="package://testAMR7/meshes/link_FR.STL" />
+            </geometry>
+            <material name="black" />
+        </visual>
+        
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <sphere radius="${wheel_sphere_radius}"/>
+            </geometry>
+            <surface>
+                <friction>
+                    <ode>
+                        <mu>${wheel_mu1}</mu>
+                        <mu2>${wheel_mu2}</mu2>
+                        <slip1>0.00001</slip1>
+                        <slip2>0.00001</slip2>
+                    </ode>
+                </friction>
+                <contact>
+                    <ode>
+                        <kp>${wheel_kp}</kp>
+                        <kd>${wheel_kd}</kd>
+                        <min_depth>${wheel_min_depth}</min_depth>
+                        <max_vel>${wheel_max_vel}</max_vel>
+                    </ode>
+                </contact>
+            </surface>
+        </collision>
+    </link>
+
+    <!-- Wheel joint -->
+    <joint name="joint_FR" type="continuous">
+        <origin xyz="0 0 -0.063051" rpy="0 0 0" />
+        <parent link="link_FR_steer" />
+        <child link="link_FR" />
+        <axis xyz="0 1 0" />
+        <dynamics damping="${wheel_joint_damping}" friction="${wheel_joint_friction}"/>
+    </joint>
+
+
+    
+    <!-- Steering link -->
+    <link name="link_FL_steer">
+        <inertial>
+            <origin xyz="0 0 -0.0385810917609336" rpy="0 0 0" />
+            <mass value="0.365838838076066" />
+            <inertia
+                ixx="0.000194978040363627"
+                ixy="0"
+                ixz="0"
+                iyy="0.000206546309895131"
+                iyz="0"
+                izz="0.000335955378598039" />
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <mesh filename="package://testAMR7/meshes/link_FL_steer.STL" />
+            </geometry>
+            <material name="black" />
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <mesh filename="package://testAMR7/meshes/link_FL_steer.STL" />
+            </geometry>
+        </collision>
+    </link>
+
+    <!-- Steering joint -->
+    <joint name="joint_FL_steer" type="continuous">
+        <origin xyz="-0.068865 -0.042677 -0.00042426" rpy="0 0 0" />
+        <parent link="base_link" />
+        <child link="link_FL_steer" />
+        <axis xyz="0 0 -1" />
+    </joint>
+
+    
+    <link name="link_FL">
+        <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <mass value="${wheel_mass}" />
+            <inertia
+                ixx="${wheel_ixx}"
+                ixy="0"
+                ixz="0"
+                iyy="${wheel_iyy}"
+                iyz="0"
+                izz="${wheel_izz}" />
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <mesh filename="package://testAMR7/meshes/link_FL.STL" />
+            </geometry>
+            <material name="black" />
+        </visual>
+        
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <sphere radius="${wheel_sphere_radius}"/>
+            </geometry>
+            <surface>
+                <friction>
+                    <ode>
+                        <mu>${wheel_mu1}</mu>
+                        <mu2>${wheel_mu2}</mu2>
+                        <slip1>0.00001</slip1>
+                        <slip2>0.00001</slip2>
+                    </ode>
+                </friction>
+                <contact>
+                    <ode>
+                        <kp>${wheel_kp}</kp>
+                        <kd>${wheel_kd}</kd>
+                        <min_depth>${wheel_min_depth}</min_depth>
+                        <max_vel>${wheel_max_vel}</max_vel>
+                    </ode>
+                </contact>
+            </surface>
+        </collision>
+    </link>
+
+    <!-- Wheel joint -->
+    <joint name="joint_FL" type="continuous">
+        <origin xyz="0 0 -0.063051" rpy="0 0 0" />
+        <parent link="link_FL_steer" />
+        <child link="link_FL" />
+        <axis xyz="0 1 0" />
+        <dynamics damping="${wheel_joint_damping}" friction="${wheel_joint_friction}"/>
+    </joint>
+
+
+    
+    <!-- Steering link -->
+    <link name="link_BL_steer">
+        <inertial>
+            <origin xyz="0 0 -0.038581091758924" rpy="0 0 0" />
+            <mass value="0.365838838105752" />
+            <inertia
+                ixx="0.000196145621458187"
+                ixy="0"
+                ixz="0"
+                iyy="0.000205378694447075"
+                iyz="0"
+                izz="0.000335955344243969" />
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <mesh filename="package://testAMR7/meshes/link_BL_steer.STL" />
+            </geometry>
+            <material name="black" />
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <mesh filename="package://testAMR7/meshes/link_BL_steer.STL" />
+            </geometry>
+        </collision>
+    </link>
+
+    <!-- Steering joint -->
+    <joint name="joint_BL_steer" type="continuous">
+        <origin xyz="0.068865 -0.042677 -0.00042426" rpy="0 0 0" />
+        <parent link="base_link" />
+        <child link="link_BL_steer" />
+        <axis xyz="0 0 -1" />
+    </joint>
+
+    
+    <link name="link_BL">
+        <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <mass value="${wheel_mass}" />
+            <inertia
+                ixx="${wheel_ixx}"
+                ixy="0"
+                ixz="0"
+                iyy="${wheel_iyy}"
+                iyz="0"
+                izz="${wheel_izz}" />
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <mesh filename="package://testAMR7/meshes/link_BL.STL" />
+            </geometry>
+            <material name="black" />
+        </visual>
+       
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <sphere radius="${wheel_sphere_radius}"/>
+            </geometry>
+            <surface>
+                <friction>
+                    <ode>
+                        <mu>${wheel_mu1}</mu>
+                        <mu2>${wheel_mu2}</mu2>
+                        <slip1>0.00001</slip1>
+                        <slip2>0.00001</slip2>
+                    </ode>
+                </friction>
+                <contact>
+                    <ode>
+                        <kp>${wheel_kp}</kp>
+                        <kd>${wheel_kd}</kd>
+                        <min_depth>${wheel_min_depth}</min_depth>
+                        <max_vel>${wheel_max_vel}</max_vel>
+                    </ode>
+                </contact>
+            </surface>
+        </collision>
+    </link>
+
+    <!-- Wheel joint -->
+    <joint name="joint_BL" type="continuous">
+        <origin xyz="0 0 -0.063051" rpy="0 0 0" />
+        <parent link="link_BL_steer" />
+        <child link="link_BL" />
+        <axis xyz="0 1 0" />
+        <dynamics damping="${wheel_joint_damping}" friction="${wheel_joint_friction}"/>
+    </joint>
+
+</robot>
