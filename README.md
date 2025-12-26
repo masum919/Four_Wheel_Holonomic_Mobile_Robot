@@ -133,7 +133,13 @@ void OmniBaseController::optimizeSteeringAngles(
 ```
 
 ## Launch command:
+
+Connect your gamepad. 
+
 *ros2 launch testAMR7 testAMR7.launch.py*
+
 **This repo inlcudes a custom hardware interface as well for serial communications** 
+
 When using real-hardware:
+
 *ros2 launch testAMR7 testAMR7.launch.py use_sim:=false*
