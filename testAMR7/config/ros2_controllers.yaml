@@ -10,20 +10,15 @@ controller_manager:
 
 omni_base_controller:
   ros__parameters:
-    # Wheel joints (drive) - MATCHING URDF EXACTLY
-    # Based on URDF joint origins from base_link:
-    # joint_BR_steer: xyz="0.068865 0.042677 -0.00042426"  -> Back-Right (x=+0.069, y=+0.043)
-    # joint_FR_steer: xyz="-0.06889 0.042677 -0.00042426"  -> Front-Right (x=-0.069, y=+0.043)
-    # joint_FL_steer: xyz="-0.06889 -0.042678 -0.00042426" -> Front-Left (x=-0.069, y=-0.043)
-    # joint_BL_steer: xyz="0.068865 -0.042678 -0.00042426" -> Back-Left (x=+0.069, y=-0.043)
+
     
     wheel_joints:
-      - joint_BR    # Back-Right wheel (x=+0.069, y=+0.043)
-      - joint_FR    # Front-Right wheel (x=-0.069, y=+0.043)
-      - joint_FL    # Front-Left wheel (x=-0.069, y=-0.043)
-      - joint_BL    # Back-Left wheel (x=+0.069, y=-0.043)
+      - joint_BR    # Back-Right wheel
+      - joint_FR    # Front-Right wheel 
+      - joint_FL    # Front-Left wheel 
+      - joint_BL    # Back-Left wheel 
     
-    # Steering joints - MATCHING wheel_joints order
+    
     steer_joints:
       - joint_BR_steer    # Back-Right steer
       - joint_FR_steer    # Front-Right steer
