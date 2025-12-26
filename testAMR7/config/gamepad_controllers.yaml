@@ -1,12 +1,3 @@
-# ============================================================================
-# GAMEPAD CONTROLLER CONFIGURATION
-# For Xbox 360 / Xbox One / Compatible Controllers
-# ============================================================================
-
-# ----------------------------------------------------------------------------
-# JOY NODE CONFIGURATION
-# Handles raw gamepad input from /dev/input/js0
-# ----------------------------------------------------------------------------
 joy_node:
   ros__parameters:
     device_id: 0                    # /dev/input/js0
@@ -14,28 +5,21 @@ joy_node:
     autorepeat_rate: 50.0           # Hz - match controller rate
     coalesce_interval_ms: 1         # Minimize latency
 
-# ----------------------------------------------------------------------------
-# SWERVE GAMEPAD CONTROLLER
+
+
 # Maps joystick inputs to omnidirectional motion commands
-# ----------------------------------------------------------------------------
+
 swerve_gamepad_controller:
   ros__parameters:
-    # ========================================================================
-    # VELOCITY LIMITS
-    # Match your omni_base_controller limits or set lower for safety
-    # ========================================================================
+    
     max_linear_velocity: 0.5        # m/s - maximum translation speed
     max_angular_velocity: 2.0       # rad/s - maximum rotation speed
     
-    # ========================================================================
-    # CONTROL PARAMETERS
-    # ========================================================================
+
     deadzone: 0.1                   # Software deadzone (0.0 - 1.0)
     publish_rate: 50.0              # Hz - cmd_vel publishing frequency
     
-    # ========================================================================
-    # SPEED MODES
-    # ========================================================================
+
     enable_precision: true          # Enable precision mode (LB button)
     precision_multiplier: 0.25      # 25% speed when LB held
     
@@ -50,7 +34,6 @@ swerve_gamepad_controller:
     #   - Left/Right    → vy (robot's strafe velocity)
     # Right Stick:
     #   - Left/Right    → omega (rotation)
-    #   - Up/Down       → (unused)
     # ========================================================================
     
     axis_linear_x: 1                # Left stick vertical (vx)
@@ -81,51 +64,7 @@ swerve_gamepad_controller:
     button_turbo: 5                 # RB - Turbo mode (150%)
     button_toggle_verbose: 7        # Start - Toggle detailed logging
 
-# ============================================================================
-# ALTERNATIVE CONFIGURATIONS
-# ============================================================================
 
-# ----------------------------------------------------------------------------
-# PRESET 1: SAFE MODE (Low speeds for testing)
-# ----------------------------------------------------------------------------
-# Uncomment to override main config:
-#
-# swerve_gamepad_controller:
-#   ros__parameters:
-#     max_linear_velocity: 0.2
-#     max_angular_velocity: 1.0
-#     precision_multiplier: 0.1
-#     turbo_multiplier: 1.0
-
-# ----------------------------------------------------------------------------
-# PRESET 2: ADVANCED MODE (Experienced operators)
-# ----------------------------------------------------------------------------
-# swerve_gamepad_controller:
-#   ros__parameters:
-#     max_linear_velocity: 1.0
-#     max_angular_velocity: 3.0
-#     deadzone: 0.05
-#     precision_multiplier: 0.2
-#     turbo_multiplier: 2.0
-
-# ----------------------------------------------------------------------------
-# PRESET 3: PS4 CONTROLLER MAPPING
-# ----------------------------------------------------------------------------
-# If using PlayStation 4 DualShock controller:
-#
-# swerve_gamepad_controller:
-#   ros__parameters:
-#     # PS4 axes are slightly different
-#     axis_linear_x: 1
-#     axis_linear_y: 0
-#     axis_angular: 2
-#     
-#     # PS4 button mapping
-#     button_emergency_stop: 0      # X (Cross)
-#     button_reset_speed: 1         # O (Circle)
-#     button_precision: 4           # L1
-#     button_turbo: 5               # R1
-#     button_toggle_verbose: 9      # Options
 
 # ============================================================================
 # NOTES
