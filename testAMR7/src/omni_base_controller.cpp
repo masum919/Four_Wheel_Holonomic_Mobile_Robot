@@ -328,7 +328,7 @@ void OmniBaseController::computeInverseKinematics(
     double vy_wheel = vy + omega * wheel_modules_[i].x;
     double wheel_speed = std::hypot(vx_wheel, vy_wheel);
     
-    // Restore negative sign as per your configuration
+    
     double angle = -std::atan2(vy_wheel, vx_wheel);
 
     if (wheel_speed < 1e-6)
