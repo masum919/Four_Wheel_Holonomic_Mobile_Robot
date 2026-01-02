@@ -469,8 +469,8 @@ void OmniBaseController::updateOdometry(const rclcpp::Time & /*time*/, const rcl
     double linear_vel = wheel_angular_vel * wheel_radius_;
 
     // Decompose into body-frame components
-    double vx_wheel = linear_vel * std::cos(steer_angle);
-    double vy_wheel = linear_vel * std::sin(steer_angle);
+    double vx_wheel = linear_vel * std::cos(-steer_angle);
+    double vy_wheel = linear_vel * std::sin(-steer_angle);
 
     vx_sum += vx_wheel;
     vy_sum += vy_wheel;
